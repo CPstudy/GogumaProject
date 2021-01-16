@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">GogumaProject</string>
+    <string name="description_main_suggest">추천 버튼</string>
+    <string name="random_suggest">랜덤 추천!</string>
 </resources>
