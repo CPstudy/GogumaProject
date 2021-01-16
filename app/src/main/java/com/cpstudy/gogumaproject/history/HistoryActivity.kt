@@ -2,15 +2,12 @@ package com.cpstudy.gogumaproject.history
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.cpstudy.gogumaproject.AppDatabase
 import com.cpstudy.gogumaproject.R
+import org.koin.android.ext.android.inject
 
 class HistoryActivity : AppCompatActivity() {
 
-    private val historyRepository: StoreHistoryRepository by lazy {
-        val database = AppDatabase.getDatabase(this)
-        StoreHistoryRepository(database.historyDao())
-    }
+    private val historyRepository: StoreHistoryRepository by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

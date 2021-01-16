@@ -12,8 +12,8 @@ interface StoreHistoryDao {
     suspend fun insertStore(history: StoreHistory)
 
     @Query("SELECT * FROM storehistory")
-    suspend fun findAll(): Flow<List<StoreHistory>>
+    fun findAll(): Flow<List<StoreHistory>>
 
     @Delete
-    fun deleteStore(history: StoreHistory)
+    suspend fun deleteStore(history: StoreHistory)
 }

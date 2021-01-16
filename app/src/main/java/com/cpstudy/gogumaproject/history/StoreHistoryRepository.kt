@@ -16,7 +16,7 @@ class StoreHistoryRepository(private val historyDao: StoreHistoryDao) {
     }
 
     @WorkerThread
-    suspend fun findAll(): Flow<List<StoreHistory>> {
+    fun findAll(): Flow<List<StoreHistory>> {
         return historyDao.findAll()
     }
 }
