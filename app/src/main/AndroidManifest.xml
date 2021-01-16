@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cpstudy.gogumaproject">
 
+    <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyDg-tVlOYLazimji3lhK9Nwn8FVSYrwj5w"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
