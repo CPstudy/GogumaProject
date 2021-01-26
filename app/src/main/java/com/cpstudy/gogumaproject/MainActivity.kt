@@ -81,19 +81,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun createLocationRequest() {
-        val locationRequest = LocationRequest.create()?.apply {
+        val locationRequest = LocationRequest.create().apply {
             interval = 10000
             fastestInterval = 5000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 
-        val builder = locationRequest?.let {
+        val builder = locationRequest.let {
             LocationSettingsRequest.Builder().addLocationRequest(it)
         }
 
         val client: SettingsClient = LocationServices.getSettingsClient(this)
         val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder?.build())
-        task.addOnSuccessListener { locationSettingsResponse ->
+        task.addOnSuccessListener {
             // All location settings are satisfied. The client can initialize
             // location requests here.
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
@@ -119,8 +119,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private val locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
-            var longitude = locationResult.lastLocation.longitude
-            var latitude = locationResult.lastLocation.latitude
+            val longitude = locationResult.lastLocation.longitude
+            val latitude = locationResult.lastLocation.latitude
             Log.d("GPS", "$latitude / $longitude")
             fusedLocationClient.removeLocationUpdates(this)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(latitude, longitude)))
