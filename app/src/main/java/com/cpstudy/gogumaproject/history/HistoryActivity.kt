@@ -27,7 +27,7 @@ class HistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_history)
+        setContentView(binding.root)
 
         historyAdapter = HistoryAdapter(onDelete = { history ->
             lifecycleScope.launch {
