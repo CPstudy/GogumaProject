@@ -1,10 +1,9 @@
 package com.cpstudy.gogumaproject
 
-import android.Manifest
 import android.content.Intent
+import android.Manifest
 import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -23,6 +22,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
+import com.cpstudy.gogumaproject.history.HistoryActivity
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -56,6 +56,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         binding.model = viewModel
         binding.lifecycleOwner = this
         setContentView(binding.root)
+
+        binding.historyButton.setOnClickListener {
+            val intent = Intent(this, HistoryActivity::class.java)
+            startActivity(intent)
+        }
 
         LocationServices.getFusedLocationProviderClient(this)
         checkPermission()
