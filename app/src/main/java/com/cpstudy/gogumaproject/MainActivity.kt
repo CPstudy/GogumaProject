@@ -17,6 +17,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -26,8 +27,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private val binding by lazy {
         DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
     }
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var mMap: GoogleMap
 
@@ -56,19 +55,30 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         binding.btnSuggest.setOnClickListener {
-            requestDeviceLocation(this) {
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(it.latitude, it.longitude)))
-                mMap.animateCamera(CameraUpdateFactory.zoomTo(15f))
-            }
+            getRestaurants()
         }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        getRestaurants()
+    }
 
-        requestDeviceLocation(this) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(it.latitude, it.longitude)))
+    private fun getRestaurants() {
+        requestDeviceLocation(this) { latLng, restaurant ->
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(latLng.latitude, latLng.longitude)))
             mMap.animateCamera(CameraUpdateFactory.zoomTo(15f))
+            mMap.clear()
+            val places = restaurant.results
+
+            for (place in places) {
+                val position = LatLng(place.geometry.location.lat, place.geometry.location.lng)
+                mMap.addMarker(
+                        MarkerOptions()
+                                .position(position)
+                                .title(place.name)
+                )
+            }
         }
     }
 

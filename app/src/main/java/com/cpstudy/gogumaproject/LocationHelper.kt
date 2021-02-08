@@ -27,8 +27,10 @@ import java.util.*
  * 현재 위치의 위도와 경도 값을 구해 [onSuccess] 수행
  *
  * @param onSuccess 위치 권한 허용 후 실행할 함수
+ * [LatLng] 현재 위도, 경도
+ * [Restaurant] 주변 식당 정보
  */
-fun requestDeviceLocation(context: Context, onSuccess: (LatLng) -> Unit) {
+fun requestDeviceLocation(context: Context, onSuccess: (LatLng, Restaurant) -> Unit) {
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     val locationRequest = LocationRequest.create()
@@ -41,8 +43,7 @@ fun requestDeviceLocation(context: Context, onSuccess: (LatLng) -> Unit) {
             val latitude = locationResult.lastLocation.latitude
             val longitude = locationResult.lastLocation.longitude
             fusedLocationClient.removeLocationUpdates(this)
-            onSuccess(LatLng(latitude, longitude))
-            getRestaurants(context, LatLng(latitude, longitude))
+            getRestaurants(LatLng(latitude, longitude), onSuccess)
         }
     }
 
@@ -60,7 +61,7 @@ fun requestDeviceLocation(context: Context, onSuccess: (LatLng) -> Unit) {
             }
 }
 
-private fun getRestaurants(context: Context, latLng: LatLng) {
+private fun getRestaurants(latLng: LatLng, onSuccess: (LatLng, Restaurant) -> Unit) {
     val retro = Retrofit.Builder()
         .baseUrl("https://maps.googleapis.com/")
         .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
@@ -68,27 +69,24 @@ private fun getRestaurants(context: Context, latLng: LatLng) {
         .build()
 
     val api = retro.create(RestaurantAPI::class.java)
-//    val callGetRestaurant = api.getNearRestaurants(
-//        "AIzaSyAZlSgYZO3kimuB7VQC0xddYJWUrQfs1gE",
-//        "restaurant",
-//        "37.4743187, 127.1509092",
-//        1000
-//    )
-//
-//    testFunction1 {
-//        testFunction2 {
-//            callGetRestaurant.enqueue(object: Callback<Restaurant> {
-//                override fun onResponse(call: Call<Restaurant>, response: Response<Restaurant>) {
-//                    Log.d("retrofit", "성공: ${response.body()}")
-//                }
-//
-//                override fun onFailure(call: Call<Restaurant>, t: Throwable) {
-//                    Log.d("retrofit", "실패: $t")
-//                }
-//
-//            })
-//        }
-//    }
+    val callGetRestaurant = api.getNearRestaurants(
+        "AIzaSyAZlSgYZO3kimuB7VQC0xddYJWUrQfs1gE",
+        "restaurant",
+        "${latLng.latitude}, ${latLng.longitude}",
+        1000
+    )
+
+    callGetRestaurant
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnNext {
+                Log.d("rx", it.toString())
+                onSuccess(latLng, it)
+            }
+            .doOnError {
+                Log.e("rx", it.toString())
+            }
+            .subscribe()
 
 
 //    testFuntionObservable1()
@@ -110,16 +108,16 @@ private fun getRestaurants(context: Context, latLng: LatLng) {
 //        }
 //        .subscribe()
 
-    GlobalScope.launch { 
-        val result1 = testFuntionObservable1().blockingFirst()
-        val result2 = testFuntionObservable1().blockingFirst()
-        val restaurant = api.getNearRestaurants(
-            "AIzaSyAZlSgYZO3kimuB7VQC0xddYJWUrQfs1gE",
-            "restaurant",
-            "37.4743187, 127.1509092",
-            1000
-        )
-    }
+//    GlobalScope.launch {
+//        val result1 = testFuntionObservable1().blockingFirst()
+//        val result2 = testFuntionObservable1().blockingFirst()
+//        val restaurant = api.getNearRestaurants(
+//            "AIzaSyAZlSgYZO3kimuB7VQC0xddYJWUrQfs1gE",
+//            "restaurant",
+//            "37.4743187, 127.1509092",
+//            1000
+//        )
+//    }
 }
 private fun testFuntionObservable1(): Observable<Int> {
     return Observable.fromCallable {
