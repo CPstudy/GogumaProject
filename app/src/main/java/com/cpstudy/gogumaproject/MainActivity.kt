@@ -1,7 +1,7 @@
 package com.cpstudy.gogumaproject
 
-import android.content.Intent
 import android.Manifest
+import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.cpstudy.gogumaproject.databinding.ActivityMainBinding
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -32,8 +31,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private val binding by lazy {
         DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
     }
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var mMap: GoogleMap
 
@@ -69,89 +66,39 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         binding.btnSuggest.setOnClickListener {
-            myLocation()
+            getRestaurants()
         }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(
-            MarkerOptions()
-                .position(sydney)
-                .title("Marker in Sydney")
-        )
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        getRestaurants()
     }
 
-    private fun createLocationRequest() {
-        val locationRequest = LocationRequest.create().apply {
-            interval = 10000
-            fastestInterval = 5000
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
+    private fun getRestaurants() {
+        requestDeviceLocation(this) { latLng, restaurant ->
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(latLng.latitude, latLng.longitude)))
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(15f))
+            mMap.clear()
+            val places = restaurant.results
 
-        val builder = locationRequest.let {
-            LocationSettingsRequest.Builder().addLocationRequest(it)
-        }
-
-        val client: SettingsClient = LocationServices.getSettingsClient(this)
-        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder?.build())
-        task.addOnSuccessListener {
-            // All location settings are satisfied. The client can initialize
-            // location requests here.
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
-            checkPermission()
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-        }
-
-        task.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException){
-                // Location settings are not satisfied, but this can be fixed
-                // by showing the user a dialog.
-                try {
-                    // Show the dialog by calling startResolutionForResult(),
-                    // and check the result in onActivityResult().
-                    exception.startResolutionForResult(this@MainActivity, 100)
-                } catch (sendEx: IntentSender.SendIntentException) {
-                    // Ignore the error.
-                }
+            for (place in places) {
+                val position = LatLng(place.geometry.location.lat, place.geometry.location.lng)
+                mMap.addMarker(
+                        MarkerOptions()
+                                .position(position)
+                                .title(place.name)
+                )
             }
         }
     }
 
-    private val locationCallback: LocationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            super.onLocationResult(locationResult)
-            val longitude = locationResult.lastLocation.longitude
-            val latitude = locationResult.lastLocation.latitude
-            Log.d("GPS", "$latitude / $longitude")
-            fusedLocationClient.removeLocationUpdates(this)
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(latitude, longitude)))
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(15f))
-        }
-
-        override fun onLocationAvailability(locationAvailability: LocationAvailability) {
-            super.onLocationAvailability(locationAvailability)
-
-        }
-    }
-
-    private fun myLocation() {
-        checkPermission()
-        createLocationRequest()
-    }
-
-    private fun checkPermission(): Boolean {
+    private fun checkPermission() {
 
         when {
-            ContextCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                Log.d("GPS", "위치 권한 확인")
-                return true
+            ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED -> {
+
             }
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
                 // In an educational UI, explain to the user why your app requires this
@@ -168,7 +115,5 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
-
-        return false
     }
 }
